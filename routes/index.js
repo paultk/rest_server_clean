@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
 
-
 var con;
 
 
@@ -16,6 +15,8 @@ const CLEAR_DB = {
 
 const LATITUDE = 'latitude'
 const LONGITUDE = 'longitude'
+const TIMESTAMP = 'timestamp'
+const USER = 'user'
 
 const query = (con, values) => {
     return new Promise (resolve => {
@@ -27,24 +28,24 @@ AND
     ABS(latitude - ${con.escape(values[LATITUDE])}) < 0.1
 ;`
         con.query(sentence, (err, results, fields) => {
-        console.log('errors: ', err)
+            console.log('errors: ', err)
 
-    /*     console.log(`results:\n${results}`)
-         console.log(`fields:\n${fields}`)
+            /*     console.log(`results:\n${results}`)
+                 console.log(`fields:\n${fields}`)
 
-         // results = results[0]
-         results.forEach( result => {
-                 for (const key of Object.keys(result)) {
-                     console.log(`key: ${key}\nValue: ${result[key]}`)
-                 }
-             }
-         )*/
-    // con.end()
-    resolve(results)
+                 // results = results[0]
+                 results.forEach( result => {
+                         for (const key of Object.keys(result)) {
+                             console.log(`key: ${key}\nValue: ${result[key]}`)
+                         }
+                     }
+                 )*/
+            // con.end()
+            resolve(results)
 
-    // return results
-})
-})
+            // return results
+        })
+    })
 
 }
 
@@ -55,8 +56,8 @@ const insert = (con, values) => {
     con.query(sentence, (error, resultSet, fields) => {
         // console.log(resultSet)
         console.log(error)
-    // con.end()
-})
+        // con.end()
+    })
 }
 
 
@@ -64,24 +65,24 @@ const dbQuery = (callback, values) => {
     return new Promise(resolve => {
 
         if (!con || con.state === 'disconnected') {
-        con = mysql.createConnection(
-            CLEAR_DB
-        );
-        con.connect(function (err) {
-            // if (err) throw err;
-            dbQuery(callback, values)
-        })
-    } else {
-        console.log("Connected!");
-        resolve(callback(con, values))
-    }
+            con = mysql.createConnection(
+                CLEAR_DB
+            );
+            con.connect(function (err) {
+                // if (err) throw err;
+                dbQuery(callback, values)
+            })
+            con.on('error', err => {
+                console.log('this is error\n', err)
+            })
+        } else {
+            console.log("Connected!");
+            resolve(callback(con, values))
+        }
 
-})
+    })
 
 }
-let values = {};
-values[LONGITUDE] = 52.3644
-values[LATITUDE] = 4.913299
 
 
 /* GET home page. */
@@ -90,9 +91,9 @@ router.get('/', function(req, res, next) {
         dbQuery(insert, values)
         dbQuery(query, values )
             .then( val1 => {
-            console.log('val1', val1)
-        res.send(JSON.stringify(val1))
-    })
+                console.log('val1', val1)
+                res.send(JSON.stringify(val1))
+            })
     } catch (err) {
         console.log('err')
     }
@@ -102,28 +103,28 @@ router.get('/', function(req, res, next) {
 
 router.post('/', (req, res, next) =>{
 
-    /*
-        req = req['body']
-        for (const key of Object.keys(req)) {
-            console.log(req[key])
-        }
-        // console.log(`req\n${req}`)
-        res.send(JSON.stringify({something: "something"}))
-    */
+
+    let values = req['body']
+    for (const key of Object.keys(values)) {
+        console.log(`${key}/t${values[key]}`)
+    }
+    // console.log(`values\n${values}`)
+    // res.send(JSON.stringify({something: "something"}))
+
 
 
     try {
         dbQuery(insert, values)
         dbQuery(query, values )
-        .then( val => {
-        console.log('val', val)
-    res.send(JSON.stringify(val))
-})
-} catch (err) {
-    console.log('err')
-}
+            .then( val => {
+                console.log('val', val)
+                res.send(JSON.stringify(val))
+            })
+    } catch (err) {
+        console.log('err')
+    }
 
-// res.render('index', { title: 'Express' });
+    // res.render('index', { title: 'Express' });
 
 })
 
