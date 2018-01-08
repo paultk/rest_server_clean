@@ -87,6 +87,8 @@ const dbQuery = (callback, values) => {
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+    console.log('ping')
+    res.send(JSON.stringify({'one': 'two'}))
     try {
         dbQuery(insert, values)
         dbQuery(query, values )
